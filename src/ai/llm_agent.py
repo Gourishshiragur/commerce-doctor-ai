@@ -4,16 +4,19 @@ import requests
 def analyze_data(data_sample):
 
     prompt = f"""
-    You are a data quality expert.
+    You are a senior data engineer.
 
-    Given this ecommerce data:
+    Analyze this ecommerce dataset:
     {data_sample}
 
-    Find:
-    1. Data Issues
-    2. Fix Suggestions
+    Identify clearly:
+    - Null values
+    - Duplicate records
+    - Negative or invalid values
 
-    Give answer in bullet points.
+    Then suggest fixes.
+
+    Return answer in bullet points.
     """
 
     try:
@@ -27,11 +30,10 @@ def analyze_data(data_sample):
             timeout=30
         )
 
-        data = res.json()
-        response = data.get("response", "").strip()
+        response = res.json().get("response", "").strip()
 
-        if not response:
-            return "No meaningful response from AI"
+        if len(response) < 10:
+            return "AI could not generate meaningful output. Try again."
 
         return response
 
@@ -43,17 +45,17 @@ def analyze_data(data_sample):
 def generate_fix_code(data_sample):
 
     prompt = f"""
-    You are a senior data engineer.
+    You are a PySpark expert.
 
     Given this dataset:
     {data_sample}
 
-    Generate PySpark code to fix:
-    - null values in customer_id
-    - negative values in amount
-    - duplicate order_id
+    Write PySpark code to:
+    - Remove null customer_id
+    - Remove negative amount
+    - Drop duplicate order_id
 
-    Only return PySpark code. No explanation.
+    Return only valid PySpark code.
     """
 
     try:
@@ -64,14 +66,13 @@ def generate_fix_code(data_sample):
                 "prompt": prompt,
                 "stream": False
             },
-            timeout=30
+            timeout=60
         )
 
-        data = res.json()
-        code = data.get("response", "").strip()
+        code = res.json().get("response", "").strip()
 
-        if not code:
-            return "# No code generated"
+        if len(code) < 10:
+            return "# AI could not generate code"
 
         return code
 
