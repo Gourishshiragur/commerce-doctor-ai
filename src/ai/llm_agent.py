@@ -4,20 +4,29 @@ import requests
 def analyze_data(data_sample):
 
     prompt = f"""
-    You are a senior data engineer.
+You are a senior data engineer.
 
-    Analyze this ecommerce dataset:
-    {data_sample}
+Here is a sample of an ecommerce dataset:
+{data_sample}
 
-    Identify clearly:
-    - Null values
-    - Duplicate records
-    - Negative or invalid values
+STRICT CHECK RULES:
+1. If any order_id appears more than once → mark as DUPLICATE
+2. If any customer_id is null → mark as MISSING
+3. If any amount is less than 0 → mark as INVALID
 
-    Then suggest fixes.
+IMPORTANT:
+- Do NOT assume data is clean
+- Only use the given sample
+- Be precise
 
-    Return answer in bullet points.
-    """
+OUTPUT FORMAT:
+
+Data Issues:
+- ...
+
+Fix Suggestions:
+- ...
+"""
 
     try:
         res = requests.post(
@@ -27,13 +36,13 @@ def analyze_data(data_sample):
                 "prompt": prompt,
                 "stream": False
             },
-            timeout=30
+            timeout=60
         )
 
         response = res.json().get("response", "").strip()
 
-        if len(response) < 10:
-            return "AI could not generate meaningful output. Try again."
+        if len(response) < 15:
+            return "AI could not detect issues properly. Try with more data."
 
         return response
 
@@ -45,18 +54,23 @@ def analyze_data(data_sample):
 def generate_fix_code(data_sample):
 
     prompt = f"""
-    You are a PySpark expert.
+You are a senior PySpark engineer.
 
-    Given this dataset:
-    {data_sample}
+Dataset sample:
+{data_sample}
 
-    Write PySpark code to:
-    - Remove null customer_id
-    - Remove negative amount
-    - Drop duplicate order_id
+Write PySpark code to:
+- Remove rows where customer_id is null
+- Remove rows where amount < 0
+- Remove duplicate order_id
 
-    Return only valid PySpark code.
-    """
+IMPORTANT:
+- Use PySpark DataFrame syntax
+- Assume dataframe name is df
+- Do NOT add explanations
+
+Return only clean PySpark code.
+"""
 
     try:
         res = requests.post(
@@ -71,8 +85,8 @@ def generate_fix_code(data_sample):
 
         code = res.json().get("response", "").strip()
 
-        if len(code) < 10:
-            return "# AI could not generate code"
+        if len(code) < 15:
+            return "# AI could not generate valid code"
 
         return code
 

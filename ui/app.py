@@ -37,8 +37,7 @@ file = st.file_uploader("📂 Upload Orders JSON")
 
 if file:
     df = pd.read_json(file)
-    sample = df.head(1).to_dict(orient="records")
-
+    sample = df.head(5).to_dict(orient="records")
     log("File uploaded")
 
     # ---------------- DATA PREVIEW ----------------
