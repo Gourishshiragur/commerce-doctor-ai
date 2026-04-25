@@ -1,25 +1,18 @@
 import requests
 
-# ---------------- AI ANALYSIS ----------------
-def analyze_data(data_sample):
+OLLAMA_URL = "http://localhost:11434/api/generate"
+MODEL = "phi"
+
+
+# ---------------- AI ANALYSIS (EXPLANATION ONLY) ----------------
+def analyze_data(summary):
 
     prompt = f"""
-You are a senior data engineer.
+Analyze this data quality summary:
 
-Here is a sample of an ecommerce dataset:
-{data_sample}
+{summary}
 
-STRICT CHECK RULES:
-1. If any order_id appears more than once → mark as DUPLICATE
-2. If any customer_id is null → mark as MISSING
-3. If any amount is less than 0 → mark as INVALID
-
-IMPORTANT:
-- Do NOT assume data is clean
-- Only use the given sample
-- Be precise
-
-OUTPUT FORMAT:
+Explain clearly:
 
 Data Issues:
 - ...
@@ -30,9 +23,9 @@ Fix Suggestions:
 
     try:
         res = requests.post(
-            "http://localhost:11434/api/generate",
+            OLLAMA_URL,
             json={
-                "model": "phi",
+                "model": MODEL,
                 "prompt": prompt,
                 "stream": False
             },
@@ -41,8 +34,8 @@ Fix Suggestions:
 
         response = res.json().get("response", "").strip()
 
-        if len(response) < 15:
-            return "AI could not detect issues properly. Try with more data."
+        if len(response) < 10:
+            return "AI could not generate explanation."
 
         return response
 
@@ -51,32 +44,26 @@ Fix Suggestions:
 
 
 # ---------------- AI CODE GENERATION ----------------
-def generate_fix_code(data_sample):
+def generate_fix_code(summary):
 
     prompt = f"""
-You are a senior PySpark engineer.
+Generate PySpark code based on this data issue summary:
 
-Dataset sample:
-{data_sample}
+{summary}
 
-Write PySpark code to:
-- Remove rows where customer_id is null
-- Remove rows where amount < 0
-- Remove duplicate order_id
+Tasks:
+- Remove null customer_id
+- Remove negative amount
+- Drop duplicate order_id
 
-IMPORTANT:
-- Use PySpark DataFrame syntax
-- Assume dataframe name is df
-- Do NOT add explanations
-
-Return only clean PySpark code.
+Return only PySpark code using df as dataframe.
 """
 
     try:
         res = requests.post(
-            "http://localhost:11434/api/generate",
+            OLLAMA_URL,
             json={
-                "model": "phi",
+                "model": MODEL,
                 "prompt": prompt,
                 "stream": False
             },
@@ -85,8 +72,8 @@ Return only clean PySpark code.
 
         code = res.json().get("response", "").strip()
 
-        if len(code) < 15:
-            return "# AI could not generate valid code"
+        if len(code) < 10:
+            return "# AI could not generate code"
 
         return code
 
